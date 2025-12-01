@@ -1,43 +1,36 @@
-// memory บนหน้าเว็บ
-let chatHistory = [];
+// URL Backend
+const API_BASE = "https://chicken-llm-web.onrender.com";
 
-// แสดงข้อความในกล่องแชท
-function showMessage(text, sender) {
-    let box = document.getElementById("chat-box");
-    let div = document.createElement("div");
-
-    div.className = sender === "user" ? "user-msg" : "ai-msg";
-    div.innerText = text;
-
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
-
-// ส่งข้อความไป backend
+// ส่งข้อความไปยัง Chat API
 async function sendMessage() {
-    let input = document.getElementById("message");
-    let msg = input.value.trim();
+    const input = document.getElementById("messageInput");
+    const msg = input.value.trim();
     if (!msg) return;
 
-    // ล้างช่องข้อความ
+    addUserMessage(msg);
     input.value = "";
 
-    // แสดงที่หน้าจอ
-    showMessage(msg, "user");
+    try {
+        const res = await fetch(`${API_BASE}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg })
+        });
 
-    // เก็บ history
-    chatHistory.push({
-        role: "user",
-        content: msg
-    });
+        const data = await res.json();
 
-    // ส่งไป Flask
-    let res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
-    });
+        let botReply = "";
+        if (data && data.reply) botReply = data.reply;
+        else botReply = "⚠️ Server did not send a reply";
 
-    let data = await res.json();
-    showMessage(data.reply, "ai");
+        addBotMessage(botReply);
+
+    } catch (err) {
+        addBotMessage("❌ Cannot connect to server");
+    }
 }
+
+
+
+
+

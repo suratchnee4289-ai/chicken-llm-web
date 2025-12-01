@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>🐣 Chicken LLM Web</title>
+    <meta charset="UTF-8">
+    <title>Chicken LLM Web</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
+    <h1 class="title">🐣 Chicken LLM Web</h1>
 
-<h1>🐣 Chicken LLM Web</h1>
+    <div id="chat-box" class="chat-box"></div>
 
-<div id="chat-box" class="chat-box"></div>
+    <div class="input-area">
+        <input id="user-input" type="text" placeholder="พิมพ์ข้อความ..." />
+        <button id="send-btn">ส่ง</button>
+    </div>
 
-<div class="input-area">
-    <textarea id="message" placeholder="พิมพ์ข้อความ..."></textarea>
-    <button onclick="sendMessage()">ส่ง</button>
-</div>
-
-<script src="/static/script.js"></script>
-
+    <script src="/static/script.js"></script>
 </body>
 </html>
+
 
 
       
