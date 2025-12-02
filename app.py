@@ -14,8 +14,7 @@ CORS(app)
 def home():
     return render_template("index.html")
 
-
-# ================= Chat API =================
+# ========== Chat API ==========
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -29,14 +28,13 @@ def chat():
             ]
         )
 
-        # ใหม่: โครงสร้าง API เปลี่ยนเป็น message['content']
-        reply = response.choices[0].message['content']
+        # แก้จุดสำคัญ!!  ต้องอ่าน content แบบนี้
+        reply = response.choices[0].message["content"]
 
     except Exception as e:
         reply = f"❌ Error: {str(e)}"
 
     return jsonify({"reply": reply})
-
 
 # ================= TTS API =================
 @app.route("/tts", methods=["POST"])
