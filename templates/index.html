@@ -2,27 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken LLM Web</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
-    <h1 class="title">🐣 Chicken LLM Web</h1>
 
-    <div id="chat-box" class="chat-box"></div>
+    <!-- LOGO -->
+    <div class="logo">
+        <img src="https://cdn-icons-png.flaticon.com/512/1864/1864514.png" alt="logo">
+    </div>
 
-    <div class="input-area">
-        <input id="user-input" type="text" placeholder="พิมพ์ข้อความ..." />
+    <h1 class="title">Chicken LLM Web</h1>
+
+    <!-- CHAT CONTAINER -->
+    <div id="chat-container">
+
+        <!-- Messages area -->
+        <div id="messages"></div>
+    <!-- Input -->
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="พิมพ์ข้อความ..." />
         <button id="send-btn">ส่ง</button>
     </div>
 
-    <script src="/static/script.js"></script>
+    <script src="/static/script.js" defer></script>
 </body>
 </html>
 
-
-
-      
-
-
-
+        

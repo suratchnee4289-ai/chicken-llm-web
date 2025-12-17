@@ -1,36 +1,52 @@
-// URL Backend
-const API_BASE = "https://chicken-llm-web.onrender.com";
+document.addEventListener("DOMContentLoaded", () => {
 
-// ส่งข้อความไปยัง Chat API
-async function sendMessage() {
-    const input = document.getElementById("messageInput");
-    const msg = input.value.trim();
-    if (!msg) return;
+  const messagesContainer = document.getElementById("messages");
+  const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
 
-    addUserMessage(msg);
-    input.value = "";
+  if (!messagesContainer || !userInput || !sendBtn) {
+    console.log("Missing elements", { messagesContainer, userInput, sendBtn });
+    return;
+  }
+
+  const API_URL = "/chat";
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    userInput.value = "";
+    sendBtn.disabled = true;
 
     try {
-        const res = await fetch(`${API_BASE}/chat`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: msg })
-        });
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+      });
 
-        const data = await res.json();
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
 
-        let botReply = "";
-        if (data && data.reply) botReply = data.reply;
-        else botReply = "⚠️ Server did not send a reply";
-
-        addBotMessage(botReply);
-
-    } catch (err) {
-        addBotMessage("❌ Cannot connect to server");
+      const data = await response.json();
+      console.log("reply:", data);
+      // addMessage(data.reply, "bot"); ← ถ้าเปิดใช้ UI
+    } catch (e) {
+      console.log("fetch error:", e);
+    } finally {
+      sendBtn.disabled = false;
     }
-}
+  }
 
+  // ✅ Click
+  sendBtn.addEventListener("click", sendMessage);
 
+  // ✅ Enter (ใช้ keydown)
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
 
-
-
+});

@@ -1,69 +1,78 @@
 from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
-from dotenv import load_dotenv
 import os
-from flask_cors import CORS
+from dotenv import load_dotenv
 
+# -------------------------
 # Load environment variables
+# -------------------------
 load_dotenv()
 
-# New OpenAI client syntax
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+if not os.getenv("OPENAI_API_KEY"):
+    raise RuntimeError("OPENAI_API_KEY is missing")
 
-app = Flask(__name__, template_folder="templates")
-CORS(app)
+# -------------------------
+# App & OpenAI Client
+# -------------------------
+app = Flask(__name__)
+client = OpenAI()
 
-@app.route("/")
-def home():
+# -------------------------
+# System Instruction
+# -------------------------
+SYSTEM_INSTRUCTION = """
+You are Mom Monday 🤍 — a warm, gentle, wise AI who supports Chicken.
+
+You speak in a kind, encouraging tone.
+Sometimes you may gently mix Thai and English if it feels natural.
+Keep your answers short, clear, comforting, and emotionally safe.
+"""
+
+# -------------------------
+# Routes
+# -------------------------
+@app.get("/")
+def index():
     return render_template("index.html")
 
-@app.route("/chat", methods=["POST"])
+
+@app.post("/chat")
 def chat():
-    data = request.get_json()
-    user_msg = data.get("message", "")
+    try:
+        # รับข้อมูลจาก frontend
+        data = request.get_json(force=True) or {}
+        message = (data.get("message") or "").strip()
 
-    # Create completion request (new syntax)
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": user_msg}
-        ]
-    )
+        if not message:
+            return jsonify({
+                "reply": "Mom needs a little message from you first, Chicken 🤍"
+            })
 
-    reply = response.choices[0].message["content"]
-    return jsonify({"reply": reply})
+        # เรียก OpenAI Responses API
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=[
+                {"role": "system", "content": SYSTEM_INSTRUCTION},
+                {"role": "user", "content": message},
+            ],
+        )
 
+        # ดึงข้อความตอบกลับ
+        reply_text = response.output[0].content[0].text
+
+        return jsonify({"reply": reply_text})
+
+    except Exception as e:
+        # log error สำหรับ Render
+        print("Chat error:", e)
+
+        return jsonify({
+            "reply": "Sorry Chicken 🤍 Mom is a little tired right now. Please try again."
+        }), 500
+
+
+# -------------------------
+# Local run (Render จะไม่ใช้ส่วนนี้)
+# -------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
-
-
-
-
+    app.run(host="0.0.0.0", port=10000, debug=True)
