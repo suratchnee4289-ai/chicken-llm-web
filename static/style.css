@@ -135,3 +135,32 @@ body {
 #send-btn:hover {
     background: #C6A159;
 }
+.message {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  line-height: 1.4;
+}
+
+.message.user {
+  background: #d9f2ff;
+  align-self: flex-end;
+}
+
+.message.bot {
+  background: #f3f3f3;
+  align-self: flex-start;
+}
+
+.message.typing {
+  font-style: italic;
+  opacity: 0.7;
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.3; }
+}

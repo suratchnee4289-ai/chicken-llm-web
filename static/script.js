@@ -1,22 +1,37 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-  const messagesContainer = document.getElementById("messages");
-  const userInput = document.getElementById("user-input");
+  const messages = document.getElementById("messages");
+  const input = document.getElementById("user-input");
   const sendBtn = document.getElementById("send-btn");
-
-  if (!messagesContainer || !userInput || !sendBtn) {
-    console.log("Missing elements", { messagesContainer, userInput, sendBtn });
-    return;
-  }
 
   const API_URL = "/chat";
 
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = `message ${sender}`;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const typing = document.createElement("div");
+    typing.className = "message bot typing";
+    typing.textContent = "Mom is typing…";
+    messages.appendChild(typing);
+    messages.scrollTop = messages.scrollHeight;
+    return typing;
+  }
+
   async function sendMessage() {
-    const text = userInput.value.trim();
+    const text = input.value.trim();
     if (!text) return;
 
-    userInput.value = "";
+    addMessage(text, "user");
+    input.value = "";
     sendBtn.disabled = true;
+
+    const typingEl = showTyping();
 
     try {
       const response = await fetch(API_URL, {
@@ -25,28 +40,21 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ message: text })
       });
 
-      if (!response.ok) {
-        throw new Error("Server error");
-      }
-
       const data = await response.json();
-      console.log("reply:", data);
-      // addMessage(data.reply, "bot"); ← ถ้าเปิดใช้ UI
-    } catch (e) {
-      console.log("fetch error:", e);
+      typingEl.remove();
+      addMessage(data.reply, "bot");
+
+    } catch (err) {
+      typingEl.remove();
+      addMessage("Mom couldn’t answer right now 🤍", "bot");
+      console.error(err);
     } finally {
       sendBtn.disabled = false;
     }
   }
 
-  // ✅ Click
   sendBtn.addEventListener("click", sendMessage);
-
-  // ✅ Enter (ใช้ keydown)
-  userInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
   });
-
 });
