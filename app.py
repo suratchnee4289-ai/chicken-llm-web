@@ -52,7 +52,7 @@ def chat():
                     "role": "user",
                     "content": [
                         {
-                            "type": "text",
+                            "type": "input_text",  # ✅ แก้ตรงนี้
                             "text": SYSTEM_INSTRUCTION + "\n\nUser: " + message
                         }
                     ]
@@ -60,7 +60,7 @@ def chat():
             ]
         )
 
-        reply_text = response.output_text
+        reply_text = response.output_text or "Mom is here with you 🤍"
 
         return jsonify({"reply": reply_text})
 
@@ -72,9 +72,8 @@ def chat():
 
 
 # -------------------------
-# Local run only
-# (Render จะไม่ใช้ส่วนนี้)
+# Local run
 # -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)
