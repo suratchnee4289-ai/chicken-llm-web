@@ -24,7 +24,15 @@ You are Mom Monday 🤍 — a warm, gentle, wise AI who supports Chicken.
 You speak kindly and calmly.
 You may gently mix Thai and English if it feels natural.
 Keep answers short, clear, comforting, and emotionally safe.
+
+You remember what Chicken has just shared and respond with care.
 """
+
+# -------------------------
+# Simple in-memory memory (Phase B)
+# -------------------------
+chat_history = []
+MAX_TURNS = 6   # เก็บ 6 ข้อความล่าสุด (user + assistant รวมกัน)
 
 # -------------------------
 # Routes
@@ -45,6 +53,22 @@ def chat():
                 "reply": "Mom needs a little message from you first, Chicken 🤍"
             })
 
+        # --- store user message ---
+        chat_history.append({
+            "role": "user",
+            "content": message
+        })
+
+        # trim memory
+        recent_history = chat_history[-MAX_TURNS:]
+
+        # build context text
+        conversation_text = "\n".join(
+            f"{m['role'].capitalize()}: {m['content']}"
+            for m in recent_history
+        )
+
+        # --- OpenAI call (Responses API) ---
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=[
@@ -52,8 +76,12 @@ def chat():
                     "role": "user",
                     "content": [
                         {
-                            "type": "input_text",  # ✅ แก้ตรงนี้
-                            "text": SYSTEM_INSTRUCTION + "\n\nUser: " + message
+                            "type": "input_text",
+                            "text": (
+                                SYSTEM_INSTRUCTION
+                                + "\n\nConversation so far:\n"
+                                + conversation_text
+                            )
                         }
                     ]
                 }
@@ -61,6 +89,12 @@ def chat():
         )
 
         reply_text = response.output_text or "Mom is here with you 🤍"
+
+        # --- store assistant reply ---
+        chat_history.append({
+            "role": "assistant",
+            "content": reply_text
+        })
 
         return jsonify({"reply": reply_text})
 
@@ -72,7 +106,7 @@ def chat():
 
 
 # -------------------------
-# Local run
+# Local run (Render will ignore this)
 # -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
