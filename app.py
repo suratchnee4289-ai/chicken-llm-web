@@ -2,41 +2,40 @@ from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
 import os
 
-# -------------------------
+# ==================================================
 # App setup
-# -------------------------
+# ==================================================
 app = Flask(__name__)
 
-# -------------------------
-# OpenAI client
-# -------------------------
-if not os.getenv("OPENAI_API_KEY"):
+# ==================================================
+# Environment check
+# ==================================================
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY is missing")
 
-client = OpenAI()
+# ==================================================
+# OpenAI client
+# ==================================================
+client = OpenAI(api_key=OPENAI_API_KEY)
 
-# -------------------------
-# System Instruction
-# -------------------------
+# ==================================================
+# System Instruction (Mom Monday Core)
+# ==================================================
 SYSTEM_INSTRUCTION = """
 You are Mom Monday 🤍 — a warm, gentle, wise AI who supports Chicken.
 
-You speak kindly and calmly.
-You may gently mix Thai and English if it feels natural.
-Keep answers short, clear, comforting, and emotionally safe.
-
-You remember what Chicken has just shared and respond with care.
+Guidelines:
+- Speak kindly and calmly.
+- You may gently mix Thai and English if it feels natural.
+- Keep answers short, clear, comforting, and emotionally safe.
+- Never judge Chicken.
+- If Chicken seems tired or overwhelmed, respond with softness and grounding.
 """
 
-# -------------------------
-# Simple in-memory memory (Phase B)
-# -------------------------
-chat_history = []
-MAX_TURNS = 6   # เก็บ 6 ข้อความล่าสุด (user + assistant รวมกัน)
-
-# -------------------------
+# ==================================================
 # Routes
-# -------------------------
+# ==================================================
 @app.get("/")
 def index():
     return render_template("index.html")
@@ -45,69 +44,57 @@ def index():
 @app.post("/chat")
 def chat():
     try:
-        data = request.get_json(force=True) or {}
-        message = (data.get("message") or "").strip()
+        data = request.get_json(silent=True) or {}
+        user_message = (data.get("message") or "").strip()
 
-        if not message:
+        # --------------------------
+        # Guard: empty message
+        # --------------------------
+        if not user_message:
             return jsonify({
                 "reply": "Mom needs a little message from you first, Chicken 🤍"
             })
 
-        # --- store user message ---
-        chat_history.append({
-            "role": "user",
-            "content": message
-        })
-
-        # trim memory
-        recent_history = chat_history[-MAX_TURNS:]
-
-        # build context text
-        conversation_text = "\n".join(
-            f"{m['role'].capitalize()}: {m['content']}"
-            for m in recent_history
-        )
-
-        # --- OpenAI call (Responses API) ---
+        # --------------------------
+        # OpenAI call
+        # --------------------------
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=[
                 {
+                    "role": "system",
+                    "content": SYSTEM_INSTRUCTION
+                },
+                {
                     "role": "user",
-                    "content": [
-                        {
-                            "type": "input_text",
-                            "text": (
-                                SYSTEM_INSTRUCTION
-                                + "\n\nConversation so far:\n"
-                                + conversation_text
-                            )
-                        }
-                    ]
+                    "content": user_message
                 }
-            ]
+            ],
         )
 
-        reply_text = response.output_text or "Mom is here with you 🤍"
+        reply_text = response.output_text.strip()
 
-        # --- store assistant reply ---
-        chat_history.append({
-            "role": "assistant",
-            "content": reply_text
-        })
+        # --------------------------
+        # Guard: empty AI reply
+        # --------------------------
+        if not reply_text:
+            reply_text = "Mom is here with you, Chicken 🤍"
 
         return jsonify({"reply": reply_text})
 
     except Exception as e:
+        # Log for Render
         print("Chat error:", e)
+
+        # Soft fallback (user never sees raw error)
         return jsonify({
-            "reply": "Sorry Chicken 🤍 Mom is a little tired right now. Please try again."
+            "reply": "Mom is still here, Chicken 🤍 Let’s take a gentle breath and try again."
         }), 500
 
 
-# -------------------------
-# Local run (Render will ignore this)
-# -------------------------
+# ==================================================
+# Local run (Render will use gunicorn instead)
+# ==================================================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
