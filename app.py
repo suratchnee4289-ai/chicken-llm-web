@@ -31,22 +31,20 @@ Keep answers short, clear, comforting, and emotionally safe.
 # -------------------------
 # Routes
 # -------------------------
-@app.get("/")
+@app.route("/", methods=["GET"])
 def index():
     session.setdefault("memory", [])
     return render_template("index.html")
 
 
-@app.post("/chat")
+@app.route("/chat", methods=["POST"])
 def chat():
     try:
-        data = request.get_json(force=True) or {}
-        message = (data.get("message") or "").strip()
+        data = request.get_json(force=True)
+        message = data.get("message")
 
         if not message:
-            return jsonify({
-                "reply": "Mom needs a little message from you first, Chicken 🤍"
-            })
+             return jsonify({"reply": "Mom needs a little message 🤍"})
 
         # -------------------------
         # Short-term memory (last 5 turns)
